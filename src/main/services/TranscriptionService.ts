@@ -17,8 +17,8 @@ export class TranscriptionService {
 
   private async initializeOpenAI() {
     try {
-      // In a real implementation, get API key from secure storage (Keychain)
-  const apiKey = process.env.OPENAI_API_KEY || (await this.getApiKeyFromSettingsFile()) || (await this.getApiKeyFromKeychain());
+      // Get API key from shared SettingsService
+      const apiKey = process.env.OPENAI_API_KEY || this.settingsService.getApiKey('openai');
       if (apiKey) {
         this.openai = new OpenAI({ apiKey });
       }
@@ -222,23 +222,6 @@ export class TranscriptionService {
     return Math.floor(stats.size / 32000);
   }
 
-  private async getApiKeyFromKeychain(): Promise<string | null> {
-    // TODO: Implement secure keychain storage retrieval
-    // For now, return null to indicate no API key found
-    return null;
-  }
-
-  private async getApiKeyFromSettingsFile(): Promise<string | null> {
-    try {
-      const settingsPath = path.join(os.homedir(), 'MeetingIntelligence', 'settings.json');
-      if (!fs.existsSync(settingsPath)) return null;
-      const raw = fs.readFileSync(settingsPath, 'utf8');
-      const json = JSON.parse(raw);
-      return json?.apiKeys?.openai || null;
-    } catch {
-      return null;
-    }
-  }
 
   async setApiKey(apiKey: string): Promise<void> {
     // TODO: Store API key securely in keychain

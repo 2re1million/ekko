@@ -10,15 +10,15 @@ export class AIAnalysisService {
   private anthropic: Anthropic | null = null;
   private settingsService: SettingsService;
 
-  constructor() {
-    this.settingsService = new SettingsService();
+  constructor(settingsService?: SettingsService) {
+    this.settingsService = settingsService || new SettingsService();
     this.initializeAnthropic();
   }
 
   private async initializeAnthropic() {
     try {
-      // In a real implementation, get API key from secure storage (Keychain)
-  const apiKey = process.env.ANTHROPIC_API_KEY || (await this.getApiKeyFromSettingsFile()) || (await this.getApiKeyFromKeychain());
+      // Get API key from shared SettingsService
+      const apiKey = process.env.ANTHROPIC_API_KEY || this.settingsService.getApiKey('anthropic');
       if (apiKey) {
         this.anthropic = new Anthropic({ apiKey });
       }
@@ -182,22 +182,6 @@ Formater svaret som JSON med følgende struktur:
     return `${minutes}m`;
   }
 
-  private async getApiKeyFromKeychain(): Promise<string | null> {
-    // TODO: Implement secure keychain storage retrieval
-    return null;
-  }
-
-  private async getApiKeyFromSettingsFile(): Promise<string | null> {
-    try {
-      const settingsPath = path.join(os.homedir(), 'MeetingIntelligence', 'settings.json');
-      if (!fs.existsSync(settingsPath)) return null;
-      const raw = fs.readFileSync(settingsPath, 'utf8');
-      const json = JSON.parse(raw);
-      return json?.apiKeys?.anthropic || null;
-    } catch {
-      return null;
-    }
-  }
 
   async setApiKey(apiKey: string): Promise<void> {
     // TODO: Store API key securely in keychain
